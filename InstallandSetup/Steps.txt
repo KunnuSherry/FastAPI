@@ -1,0 +1,7 @@
+1. Needs python greater than 3.6
+2. Create a virtual enviorment.
+3. pip install fastapi
+4. pip install uvicorn
+5. create main.py and import both
+6. Move to the directory and use uvicorn main:app --reload ( Since the file name is "main" and instance name is "app" )
+7. create routes
