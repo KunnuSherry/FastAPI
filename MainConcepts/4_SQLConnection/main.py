@@ -1,9 +1,10 @@
 from fastapi import FastAPI, Depends, status, Response, HTTPException
-from schemas import Blog
+from schemas import Blog, ShowBlog, User
 from database import engine, SessionLocal
 import models
 app = FastAPI()
 from sqlalchemy.orm import Session
+from hashing_password import hash_password
 
 models.Base.metadata.create_all(engine)
 
@@ -56,15 +57,15 @@ def create(request: Blog, db:Session=Depends(get_db)):
 
 
 #How to override status code
-@app.get('/get/{id}', status_code=status.HTTP_200_OK)
-def show(id, reponse: Response, db: Session = Depends(get_db)):
-    blog = db.query(models.Blog).filter(models.Blog.id==id).first()
-    if not blog:
-        # reponse.status_code = status.HTTP_404_NOT_FOUND
-        # return {"detail": "id not found"}
-        #Here is a smarter way👍
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Id not found")
-    return blog
+# @app.get('/get/{id}', status_code=status.HTTP_200_OK)
+# def show(id, reponse: Response, db: Session = Depends(get_db)):
+#     blog = db.query(models.Blog).filter(models.Blog.id==id).first()
+#     if not blog:
+#         # reponse.status_code = status.HTTP_404_NOT_FOUND
+#         # return {"detail": "id not found"}
+#         #Here is a smarter way👍
+#         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Id not found")
+#     return blog
 
 ##Delete a blog
 @app.delete('/blog/{id}', status_code=status.HTTP_204_NO_CONTENT)
@@ -74,7 +75,6 @@ def destroy(id, db: Session = Depends(get_db)):
     return {"response":'done'}
 
 ##Update a Blog
-
 @app.put('/blog/{id}', status_code=status.HTTP_202_ACCEPTED)
 def update(id: int, request: Blog, db: Session = Depends(get_db)):
     try:
@@ -89,3 +89,33 @@ def update(id: int, request: Blog, db: Session = Depends(get_db)):
     
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Update failed: {str(e)}")
+
+
+#Response Model (We will not get id)
+@app.get('/get/{id}', status_code=status.HTTP_200_OK, response_model=ShowBlog)
+def show(id, reponse: Response, db: Session = Depends(get_db)):
+    blog = db.query(models.Blog).filter(models.Blog.id==id).first()
+    if not blog:
+        # reponse.status_code = status.HTTP_404_NOT_FOUND
+        # return {"detail": "id not found"}
+        #Here is a smarter way👍
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Id not found")
+    return blog
+
+
+#####################################################################################################
+
+#Creating User
+@app.post('/user', status_code=status.HTTP_201_CREATED)
+def create(request: User, db:Session=Depends(get_db)):
+    hashed_password = hash_password(request.password)
+    new_user = models.User(
+        name=request.name,
+        email=request.email,
+        password=hashed_password
+    )
+
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    return new_user
