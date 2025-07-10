@@ -34,3 +34,13 @@ class ShowBlog(BaseModel):
 class Login(BaseModel):
     username:str
     password:str
+
+
+## JWT Models
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+
+class TokenData(BaseModel):
+    email: str | None = None
