@@ -7,6 +7,7 @@ from typing import List
 from sqlalchemy.orm import Session
 Blog = schemas.Blog
 get_db = database.get_db
+import oauth2
 
 router = APIRouter(
     tags=['Blogs'],
@@ -15,7 +16,7 @@ router = APIRouter(
 
 ## Example method for controllers
 @router.get('/get' )
-def all(db: Session = Depends(database.get_db)):
+def all(db: Session = Depends(database.get_db), get_current_user: schemas.User = Depends(oauth2.get_current_user)):
     return blog.get_all(db)
 
 @router.delete('/{id}', status_code=status.HTTP_204_NO_CONTENT)
